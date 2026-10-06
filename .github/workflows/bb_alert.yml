@@ -1,0 +1,51 @@
+name: BB Alert
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"      # ทุก 5 นาที (GitHub อาจช้าไปบ้าง)
+  workflow_dispatch:
+    inputs:
+      send_test:
+        description: "ส่งข้อความทดสอบเข้า Telegram"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: bb-alert
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt
+
+      - name: Run alert
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          TEST_MESSAGE: ${{ inputs.send_test }}
+          # ปรับค่าได้ที่นี่ เช่น CHECK_MODE: closed, COOLDOWN_SEC: 900
+          CHECK_MODE: live
+        run: python alert.py
+
+      - name: Save state
+        run: |
+          if [ -n "$(git status --porcelain state.json)" ]; then
+            git config user.name "bb-alert-bot"
+            git config user.email "bb-alert-bot@users.noreply.github.com"
+            git add state.json
+            git commit -m "update state"
+            git push
+          fi
