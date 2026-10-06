@@ -24,6 +24,8 @@ NOTIFY_RETURN = os.getenv("NOTIFY_RETURN", "false").lower() == "true"
 USE_TFS = [t.strip() for t in os.getenv("USE_TFS", "H1,H4,D1").split(",") if t.strip()]
 H4_OFFSET_HOURS = int(os.getenv("H4_OFFSET_HOURS", "1"))  # XM ฤดูร้อน (UTC+3)=1, ฤดูหนาว (UTC+2)=2
 STATE_FILE = Path(os.getenv("STATE_FILE", "state.json"))
+FULL_REPEAT = int(os.getenv("FULL_REPEAT", "3"))      # จำนวนครั้งที่ส่งซ้ำเมื่อหลุดครบทุก TF
+FULL_REPEAT_GAP = int(os.getenv("FULL_REPEAT_GAP", "4"))  # หน่วงระหว่างข้อความ (วินาที)
 
 TF_ORDER = ["H1", "H4", "D1"]
 
@@ -127,32 +129,49 @@ def evaluate(closes, state, now):
                     new_state[key][tf] = now
         return new
 
+    def build(mask, up):
+        full = total >= 2 and bits(mask) == total
+        if full:
+            side = "เหนือ BB บน" if up else "ต่ำกว่า BB ล่าง"
+            icon = "🟢" if up else "🔴"
+            text = (f"🚨🚨🚨 <b>{LABEL} หลุด {side} ครบ {total}/{total} TF</b> 🚨🚨🚨\n"
+                    f"{icon} {mask_text(mask)} | ราคา {last_price:.2f}")
+            return {"text": text, "strong": True}
+        if up:
+            text = (f"🔺 {LABEL} เหนือ BB บน | ระดับ {bits(mask)}/{total} | "
+                    f"{mask_text(mask)} | ราคา {last_price:.2f}")
+        else:
+            text = (f"🔻 {LABEL} ต่ำกว่า BB ล่าง | ระดับ {bits(mask)}/{total} | "
+                    f"{mask_text(mask)} | ราคา {last_price:.2f}")
+        return {"text": text, "strong": False}
+
     if fresh(up_mask, prev_up, "last_up"):
-        msgs.append(f"🔺 {LABEL} เหนือ BB บน | ระดับ {bits(up_mask)}/{total} | "
-                    f"{mask_text(up_mask)} | ราคา {last_price:.2f}")
+        msgs.append(build(up_mask, True))
     if fresh(lo_mask, prev_lo, "last_lo"):
-        msgs.append(f"🔻 {LABEL} ต่ำกว่า BB ล่าง | ระดับ {bits(lo_mask)}/{total} | "
-                    f"{mask_text(lo_mask)} | ราคา {last_price:.2f}")
+        msgs.append(build(lo_mask, False))
 
     if NOTIFY_RETURN:
         if prev_up & ~up_mask:
-            msgs.append(f"↩️ {LABEL} กลับเข้ากรอบจาก BB บน | {mask_text(prev_up & ~up_mask)} | ราคา {last_price:.2f}")
+            msgs.append({"text": f"↩️ {LABEL} กลับเข้ากรอบจาก BB บน | {mask_text(prev_up & ~up_mask)} | ราคา {last_price:.2f}", "strong": False})
         if prev_lo & ~lo_mask:
-            msgs.append(f"↩️ {LABEL} กลับเข้ากรอบจาก BB ล่าง | {mask_text(prev_lo & ~lo_mask)} | ราคา {last_price:.2f}")
+            msgs.append({"text": f"↩️ {LABEL} กลับเข้ากรอบจาก BB ล่าง | {mask_text(prev_lo & ~lo_mask)} | ราคา {last_price:.2f}", "strong": False})
 
     return msgs, new_state
 
 
 # ---------------- Telegram / state ----------------
-def send_telegram(text):
+def send_telegram(text, html=False):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     print(text)
     if not token or not chat_id:
         print("(ยังไม่ได้ตั้ง TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID จึงไม่ได้ส่ง)")
         return False
+    payload = {"chat_id": chat_id, "text": text}
+    if html:
+        payload["parse_mode"] = "HTML"
     r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                      data={"chat_id": chat_id, "text": text}, timeout=20)
+                      data=payload, timeout=20)
     if not r.ok:
         print("Telegram error:", r.status_code, r.text)
     return r.ok
@@ -180,7 +199,13 @@ def main():
     state = load_state()
     msgs, new_state = evaluate(closes, state, int(time.time()))
     for m in msgs:
-        send_telegram(m)
+        if m["strong"]:
+            for k in range(max(1, FULL_REPEAT)):
+                send_telegram(m["text"], html=True)
+                if k < FULL_REPEAT - 1:
+                    time.sleep(FULL_REPEAT_GAP)
+        else:
+            send_telegram(m["text"])
 
     if new_state != state:
         STATE_FILE.write_text(json.dumps(new_state, indent=2))
