@@ -1,6 +1,6 @@
 {
   "up": 0,
-  "lo": 2,
+  "lo": 0,
   "last_up": {},
   "last_lo": {
     "M30": 1791342157,
@@ -8,18 +8,14 @@
     "H4": 1791389390
   },
   "esc_up": {},
-  "esc_lo": {
-    "H4": 0
-  },
+  "esc_lo": {},
   "init": true,
   "since_up": 0,
   "sent_up": 0,
   "px_up": 0,
-  "since_lo": 1791389390,
-  "sent_lo": 1791389390,
-  "px_lo": 4132.10009765625,
+  "since_lo": 0,
+  "sent_lo": 0,
+  "px_lo": 0,
   "hist_up": [],
-  "hist_lo": [
-    1791389390
-  ]
+  "hist_lo": []
 }
