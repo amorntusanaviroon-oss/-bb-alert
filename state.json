@@ -1,7 +1,13 @@
 {
   "up": 0,
-  "lo": 0,
+  "lo": 8,
   "last_up": {},
-  "last_lo": {},
+  "last_lo": {
+    "M30": 1791342157
+  },
+  "esc_up": {},
+  "esc_lo": {
+    "M30": 0
+  },
   "init": true
 }

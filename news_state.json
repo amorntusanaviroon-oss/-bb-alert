@@ -1,0 +1,14 @@
+{
+ "events": [
+  {
+   "time": "2026-10-08T01:00:00+07:00",
+   "title": "FOMC Meeting Minutes",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "",
+   "previous": ""
+  }
+ ],
+ "fetched_at": 1791342158,
+ "reminded": []
+}
