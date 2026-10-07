@@ -1,15 +1,20 @@
 {
   "up": 0,
-  "lo": 9,
+  "lo": 0,
   "last_up": {},
   "last_lo": {
     "M30": 1791342157,
     "H1": 1791349170
   },
   "esc_up": {},
-  "esc_lo": {
-    "M30": 0,
-    "H1": 0
-  },
-  "init": true
+  "esc_lo": {},
+  "init": true,
+  "since_up": 0,
+  "sent_up": 0,
+  "px_up": 0,
+  "since_lo": 0,
+  "sent_lo": 0,
+  "px_lo": 0,
+  "hist_up": [],
+  "hist_lo": []
 }
