@@ -96,9 +96,12 @@ def evaluate(closes, state, now):
     for i, tf in enumerate(TF_ORDER):
         if tf not in USE_TFS or tf not in closes:
             continue
-        st, price, _, _ = band_state(closes[tf], live_price)
+        st, price, upper, lower = band_state(closes[tf], live_price)
         if st is None:
+            print(f"[{tf}] ข้อมูลไม่พอ")
             continue
+        print(f"[{tf}] ราคา={price:.2f} บน={upper:.2f} ล่าง={lower:.2f} "
+              f"สถานะ={'เหนือบน' if st == 1 else 'ต่ำกว่าล่าง' if st == -1 else 'ในกรอบ'}")
         last_price = price if CHECK_MODE == "closed" else live_price
         if st == 1:
             up_mask |= 1 << i
@@ -196,7 +199,11 @@ def main():
         print("ดึงข้อมูลไม่สำเร็จ (อาจเป็นช่วงตลาดปิดหรือ Yahoo ขัดข้อง) ข้ามรอบนี้")
         return
 
+    h1 = closes["H1"]
+    print(f"แท่ง H1 ล่าสุด (UTC): {h1.index[-1]} | ปิด={float(h1.iloc[-1]):.2f} | "
+          f"เวลารัน (UTC): {pd.Timestamp.utcnow():%Y-%m-%d %H:%M}")
     state = load_state()
+    print(f"สถานะที่จำไว้: up={state.get('up')} lo={state.get('lo')} init={state.get('init')}")
     msgs, new_state = evaluate(closes, state, int(time.time()))
     for m in msgs:
         if m["strong"]:
