@@ -56,6 +56,13 @@ TF_BIT = {"H1": 0, "H4": 1, "D1": 2, "M30": 3}
 DISPLAY = ["M30", "H1", "H4", "D1"]
 COLS = ["High", "Low", "Close"]
 
+# ---------------- ระดับความรุนแรง (สี) ----------------
+# น้ำหนักตาม TF: ยิ่ง TF ใหญ่ ยิ่งสำคัญ แล้วรวมคะแนนของ TF ที่หลุดอยู่
+TF_WEIGHT = {"M30": 1, "H1": 2, "H4": 4, "D1": 8}
+SEV_ICON = {1: "🟡", 2: "🟠", 3: "🔴", 4: "🟣"}
+SEV_NAME = {1: "เบา", 2: "ปานกลาง", 3: "สูง", 4: "รุนแรงมาก"}
+STRONG_LEVEL = int(os.getenv("STRONG_LEVEL", "4"))   # ระดับที่ส่งแบบเด่น 🚨 ซ้ำหลายครั้ง
+
 
 # ---------------- ดึงข้อมูล ----------------
 def _download(interval, period):
@@ -129,6 +136,22 @@ def esc_level(z):
     if z < BB_DEV + ESC_STEP:
         return 0
     return int(math.floor((z - BB_DEV) / ESC_STEP + 1e-9))
+
+
+def severity(mask, far=False):
+    """ระดับ 1-4 จาก TF ที่หลุด; far=True (หลุดไกลมาก) ขยับขึ้น 1 ระดับ
+    คะแนน: M30=1 H1=2 H4=4 D1=8
+      1-2 -> 🟡 เบา | 3-5 -> 🟠 ปานกลาง | 6-9 -> 🔴 สูง | 10+ -> 🟣 รุนแรงมาก"""
+    score = sum(TF_WEIGHT[tf] for tf in DISPLAY if mask & (1 << TF_BIT[tf]))
+    if score <= 2:
+        lvl = 1
+    elif score <= 5:
+        lvl = 2
+    elif score <= 9:
+        lvl = 3
+    else:
+        lvl = 4
+    return min(4, lvl + 1) if far else lvl
 
 
 def mask_text(mask):
@@ -212,18 +235,20 @@ def evaluate(frames, state, now):
         return new
 
     def build(mask, up):
+        zk = "z_up" if up else "z_dn"
+        far = any(esc_level(res[tf][zk]) >= 1
+                  for tf in res if tf in ESC_TFS and mask & (1 << TF_BIT[tf]))
+        lvl = severity(mask, far)
+        icon, sev = SEV_ICON[lvl], SEV_NAME[lvl]
+        arrow, side = ("🔺", "เหนือ BB บน") if up else ("🔻", "ต่ำกว่า BB ล่าง")
         full_bits = [1 << TF_BIT[t] for t in FULL_TFS]
         full = len(full_bits) >= 2 and all(mask & b for b in full_bits)
-        if full:
-            side = "เหนือ BB บน" if up else "ต่ำกว่า BB ล่าง"
-            icon = "🟢" if up else "🔴"
-            names = "+".join(FULL_TFS)
-            text = (f"🚨🚨🚨 <b>{LABEL} หลุด {side} ครบ {names}</b> 🚨🚨🚨\n"
-                    f"{icon} ระดับ {bits(mask)}/{total} | {mask_text(mask)} | ราคา {last_price:.2f}")
+        detail = f"หลุด {bits(mask)}/{total} TF: {mask_text(mask)} | ราคา {last_price:.2f}"
+        if full or lvl >= STRONG_LEVEL:
+            text = (f"🚨🚨🚨 <b>{icon} {LABEL} {side} | ความรุนแรง: {sev}</b> 🚨🚨🚨\n"
+                    f"{arrow} {detail}")
             return {"text": text, "strong": True}
-        arrow, side = ("🔺", "เหนือ BB บน") if up else ("🔻", "ต่ำกว่า BB ล่าง")
-        text = (f"{arrow} {LABEL} {side} | ระดับ {bits(mask)}/{total} | "
-                f"{mask_text(mask)} | ราคา {last_price:.2f}")
+        text = f"{icon}{arrow} {LABEL} {side} | ความรุนแรง: {sev} | {detail}"
         return {"text": text, "strong": False}
 
     prev_up_state, prev_lo_state = prev_up, prev_lo
@@ -232,11 +257,13 @@ def evaluate(frames, state, now):
     if fresh(lo_mask, prev_lo_state, "last_lo"):
         msgs.append(build(lo_mask, False))
 
-    for side, name in (("up", "บน"), ("lo", "ล่าง")):
+    for side, name, mask in (("up", "บน", up_mask), ("lo", "ล่าง", lo_mask)):
         if esc_hits[side]:
+            lvl = severity(mask, far=True)
             detail = ", ".join(f"{tf} {z:.1f}σ" for tf, z in esc_hits[side])
-            msgs.append({"text": f"🔥 {LABEL} ไปไกลจาก BB {name} มาก | {detail} | ราคา {last_price:.2f}",
-                         "strong": False})
+            text = (f"🔥{SEV_ICON[lvl]} {LABEL} ไปไกลจาก BB {name} มาก | "
+                    f"ความรุนแรง: {SEV_NAME[lvl]} | {detail} | ราคา {last_price:.2f}")
+            msgs.append({"text": text, "strong": lvl >= STRONG_LEVEL})
 
     if NOTIFY_RETURN:
         if prev_up & ~up_mask:
