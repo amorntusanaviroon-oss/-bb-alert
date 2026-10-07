@@ -51,6 +51,14 @@ ESC_STEP = float(os.getenv("ESC_STEP", "1.0"))            # ทุกกี่ �
 ESC_MAX_LEVELS = int(os.getenv("ESC_MAX_LEVELS", "2"))    # แจ้งซ้ำได้สูงสุดกี่ครั้งต่อ 1 รอบการหลุด
 ESC_TFS = _list("ESC_TFS", "H1,H4,D1")                    # TF ที่ใช้แจ้งซ้ำ (M30 ถี่เกินจึงไม่ใส่)
 
+# เตือนย้ำ: ถ้ายังหลุดอยู่และไม่มีข้อความใหม่นานเกินกำหนด จะส่งสรุปสถานะอีกครั้ง
+REPEAT_HOURS = float(os.getenv("REPEAT_HOURS", "1"))          # 0 = ปิดเตือนย้ำ
+REPEAT_SEC = int(REPEAT_HOURS * 3600)
+REPEAT_MIN_LEVEL = int(os.getenv("REPEAT_MIN_LEVEL", "2"))    # เตือนย้ำเฉพาะระดับ >= นี้ (2 = 🟠)
+# นับจำนวนครั้งที่หลุด (หลุด-กลับ-หลุดใหม่) ภายในช่วงเวลานี้ แล้วแจ้งในข้อความ เช่น "หลุดครั้งที่ 2 ใน 2 ชม."
+WINDOW_HOURS = float(os.getenv("REPEAT_WINDOW_HOURS", "2"))
+WINDOW_SEC = int(WINDOW_HOURS * 3600)
+
 # ตำแหน่งบิตเดิมคงไว้ เพื่อให้ state.json เก่ายังใช้ได้
 TF_BIT = {"H1": 0, "H4": 1, "D1": 2, "M30": 3}
 DISPLAY = ["M30", "H1", "H4", "D1"]
@@ -138,6 +146,12 @@ def esc_level(z):
     return int(math.floor((z - BB_DEV) / ESC_STEP + 1e-9))
 
 
+def fmt_dur(sec):
+    m = max(0, int(sec // 60))
+    h, m = divmod(m, 60)
+    return f"{h} ชม. {m} น." if h else f"{m} น."
+
+
 def severity(mask, far=False):
     """ระดับ 1-4 จาก TF ที่หลุด; far=True (หลุดไกลมาก) ขยับขึ้น 1 ระดับ
     คะแนน: M30=1 H1=2 H4=4 D1=8
@@ -220,6 +234,35 @@ def evaluate(frames, state, now):
                     and 1 <= k <= ESC_MAX_LEVELS):
                 esc_hits[side].append((tf, r[zk]))
 
+    # ---- สถานะ "หลุดอยู่จริงตอนนี้" และเวลาที่เริ่มหลุด (ใช้กับเตือนย้ำ) ----
+    cur = {"up": 0, "lo": 0}
+    for tf, r in res.items():
+        bit = 1 << TF_BIT[tf]
+        if r["price"] > r["upper"]:
+            cur["up"] |= bit
+        if r["price"] < r["lower"]:
+            cur["lo"] |= bit
+
+    for side, mask, prev in (("up", up_mask, prev_up), ("lo", lo_mask, prev_lo)):
+        if mask == 0:
+            new_state[f"since_{side}"] = new_state[f"sent_{side}"] = new_state[f"px_{side}"] = 0
+        elif prev == 0 or not state.get(f"since_{side}"):
+            new_state[f"since_{side}"] = now
+            new_state[f"sent_{side}"] = now
+            new_state[f"px_{side}"] = last_price
+        else:
+            for k in ("since", "sent", "px"):
+                new_state[f"{k}_{side}"] = state.get(f"{k}_{side}", 0)
+
+    # ---- ประวัติการหลุดรอบใหม่ (นับแม้ข้อความถูกกัน cooldown) ----
+    hist = {}
+    for side, mask, prev in (("up", up_mask, prev_up), ("lo", lo_mask, prev_lo)):
+        h = [t for t in state.get(f"hist_{side}", []) if now - t < WINDOW_SEC] if inited else []
+        if inited and (mask & ~prev):
+            h.append(now)
+        hist[side] = h
+        new_state[f"hist_{side}"] = h
+
     if not inited:                                    # รันครั้งแรก: จำสถานะเฉยๆ
         return msgs, new_state
 
@@ -234,16 +277,21 @@ def evaluate(frames, state, now):
                     new_state[key][tf] = now
         return new
 
-    def build(mask, up):
+    def is_far(mask, up):
         zk = "z_up" if up else "z_dn"
-        far = any(esc_level(res[tf][zk]) >= 1
-                  for tf in res if tf in ESC_TFS and mask & (1 << TF_BIT[tf]))
-        lvl = severity(mask, far)
+        return any(esc_level(res[tf][zk]) >= 1
+                   for tf in res if tf in ESC_TFS and mask & (1 << TF_BIT[tf]))
+
+    def build(mask, up):
+        lvl = severity(mask, is_far(mask, up))
         icon, sev = SEV_ICON[lvl], SEV_NAME[lvl]
         arrow, side = ("🔺", "เหนือ BB บน") if up else ("🔻", "ต่ำกว่า BB ล่าง")
         full_bits = [1 << TF_BIT[t] for t in FULL_TFS]
         full = len(full_bits) >= 2 and all(mask & b for b in full_bits)
         detail = f"หลุด {bits(mask)}/{total} TF: {mask_text(mask)} | ราคา {last_price:.2f}"
+        n = len(hist["up" if up else "lo"])
+        if n >= 2:
+            detail += f" | ⚠️ หลุดครั้งที่ {n} ใน {WINDOW_HOURS:g} ชม."
         if full or lvl >= STRONG_LEVEL:
             text = (f"🚨🚨🚨 <b>{icon} {LABEL} {side} | ความรุนแรง: {sev}</b> 🚨🚨🚨\n"
                     f"{arrow} {detail}")
@@ -251,11 +299,13 @@ def evaluate(frames, state, now):
         text = f"{icon}{arrow} {LABEL} {side} | ความรุนแรง: {sev} | {detail}"
         return {"text": text, "strong": False}
 
-    prev_up_state, prev_lo_state = prev_up, prev_lo
-    if fresh(up_mask, prev_up_state, "last_up"):
+    sent_now = {"up": False, "lo": False}
+    if fresh(up_mask, prev_up, "last_up"):
         msgs.append(build(up_mask, True))
-    if fresh(lo_mask, prev_lo_state, "last_lo"):
+        sent_now["up"] = True
+    if fresh(lo_mask, prev_lo, "last_lo"):
         msgs.append(build(lo_mask, False))
+        sent_now["lo"] = True
 
     for side, name, mask in (("up", "บน", up_mask), ("lo", "ล่าง", lo_mask)):
         if esc_hits[side]:
@@ -264,6 +314,27 @@ def evaluate(frames, state, now):
             text = (f"🔥{SEV_ICON[lvl]} {LABEL} ไปไกลจาก BB {name} มาก | "
                     f"ความรุนแรง: {SEV_NAME[lvl]} | {detail} | ราคา {last_price:.2f}")
             msgs.append({"text": text, "strong": lvl >= STRONG_LEVEL})
+            sent_now[side] = True
+
+    # ---- เตือนย้ำ: ยังหลุดอยู่จริง และเงียบมานานเกิน REPEAT_HOURS ----
+    if REPEAT_SEC > 0:
+        for side, up, mask_all in (("up", True, up_mask), ("lo", False, lo_mask)):
+            mask = cur[side]
+            if not mask or not mask_all or sent_now[side]:
+                continue
+            if now - new_state[f"sent_{side}"] < REPEAT_SEC:
+                continue
+            lvl = severity(mask, is_far(mask, up))
+            if lvl < REPEAT_MIN_LEVEL:
+                continue
+            arrow, where = ("🔺", "เหนือ BB บน") if up else ("🔻", "ต่ำกว่า BB ล่าง")
+            diff = last_price - new_state[f"px_{side}"]
+            text = (f"🔁{SEV_ICON[lvl]}{arrow} {LABEL} ยังอยู่{where} | ความรุนแรง: {SEV_NAME[lvl]} | "
+                    f"หลุด {bits(mask)}/{total} TF: {mask_text(mask)} | "
+                    f"นาน {fmt_dur(now - new_state[f'since_{side}'])} | "
+                    f"ราคา {last_price:.2f} ({diff:+.1f} จากตอนหลุด)")
+            msgs.append({"text": text, "strong": False})
+            new_state[f"sent_{side}"] = now
 
     if NOTIFY_RETURN:
         if prev_up & ~up_mask:
