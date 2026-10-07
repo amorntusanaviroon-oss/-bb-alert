@@ -1,0 +1,28 @@
+name: News Brief
+
+on:
+  schedule:
+    - cron: "0 0 * * *"        # 00:00 UTC = 07:00 เวลาไทย (GitHub อาจช้าได้ 10-30 นาที)
+  workflow_dispatch:
+
+jobs:
+  brief:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Send news brief
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+          # ปรับได้ เช่น NEWS_IMPACTS: "High,Medium"  NEWS_CURRENCIES: "USD,EUR"
+          NEWS_CURRENCIES: "USD"
+          NEWS_IMPACTS: "High"
+        run: python news_brief.py
