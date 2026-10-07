@@ -6,6 +6,7 @@ News Brief -> Telegram
 """
 import json
 import os
+import re
 import sys
 import time
 from datetime import datetime, timedelta, timezone
@@ -32,7 +33,28 @@ REFRESH_HOURS = int(os.getenv("NEWS_REFRESH_HOURS", "6"))  # ดึงฟีด�
 TH_DAYS = ["จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์", "อาทิตย์"]
 TH_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
              "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."]
-IMPACT_ICON = {"high": "🔴", "medium": "🟠", "low": "🟡"}
+
+# ---------------- ระดับความรุนแรงของข่าว (สี) ----------------
+#  🟣 รุนแรงมาก = ข่าว High ที่เป็นตัวขยับทองแรงๆ (ดอกเบี้ย Fed, NFP, CPI, PCE, ประธาน Fed)
+#  🔴 สูง       = ข่าว High อื่นๆ
+#  🟠 ปานกลาง   = ข่าว Medium
+#  🟡 เบา       = ข่าว Low
+SEV_ICON = {1: "🟡", 2: "🟠", 3: "🔴", 4: "🟣"}
+SEV_NAME = {1: "เบา", 2: "ปานกลาง", 3: "สูง", 4: "รุนแรงมาก"}
+KEYWORDS = [k.strip().lower() for k in os.getenv(
+    "NEWS_KEYWORDS",
+    "non-farm,cpi,fomc,federal funds rate,fed chair,pce").split(",") if k.strip()]
+LEGEND = "🟡 เบา · 🟠 ปานกลาง · 🔴 สูง · 🟣 รุนแรงมาก"
+
+
+def news_severity(ev):
+    impact = ev.get("impact", "")
+    if impact == "high":
+        title = str(ev.get("title", "")).lower()
+        if any(re.search(r"\b" + re.escape(k) + r"\b", title) for k in KEYWORDS):
+            return 4
+        return 3
+    return {"medium": 2, "low": 1}.get(impact, 1)
 
 
 def fetch_events():
@@ -90,8 +112,10 @@ def format_message(events, now):
         if ev["previous"]:
             detail.append(f"ก่อนหน้า {ev['previous']}")
         tail = f"  [{' | '.join(detail)}]" if detail else ""
-        icon = IMPACT_ICON.get(ev["impact"], "•")
+        icon = SEV_ICON[news_severity(ev)]
         lines.append(f"{icon} {ev['time']:%H:%M}{day_note}  {ev['cur']} {ev['title']}{tail}")
+    top = max(news_severity(e) for e in events)
+    lines += ["", f"แรงสุดวันนี้: {SEV_ICON[top]} {SEV_NAME[top]}", LEGEND]
     return "\n".join(lines)
 
 
@@ -155,7 +179,9 @@ def remind(now=None):
     for t in sorted(due):
         group = due[t]
         mins = max(1, round((t - now).total_seconds() / 60))
-        lines = [f"⏰ อีกประมาณ {mins} นาที ข่าวแรง ({t:%H:%M} เวลาไทย)"]
+        top = max(news_severity(e) for e in group)
+        siren = "🚨🚨🚨 " if top >= 4 else ""
+        lines = [f"{siren}⏰{SEV_ICON[top]} อีกประมาณ {mins} นาที ข่าว{SEV_NAME[top]} ({t:%H:%M} เวลาไทย)"]
         for ev in group:
             detail = []
             if ev["forecast"]:
@@ -163,7 +189,7 @@ def remind(now=None):
             if ev["previous"]:
                 detail.append(f"ก่อนหน้า {ev['previous']}")
             tail = f"  [{' | '.join(detail)}]" if detail else ""
-            lines.append(f"{IMPACT_ICON.get(ev['impact'], '•')} {ev['cur']} {ev['title']}{tail}")
+            lines.append(f"{SEV_ICON[news_severity(ev)]} {ev['cur']} {ev['title']}{tail}")
         lines.append("⚠️ ระวังราคาแกว่งแรงและสเปรดกว้าง")
         send_telegram("\n".join(lines))
 
