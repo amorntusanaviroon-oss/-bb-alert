@@ -4,6 +4,7 @@ News Brief -> Telegram
 แหล่งข้อมูล: ปฏิทินสาธารณะของ ForexFactory (ฟีด JSON ฟรี ไม่มี API key)
 ช่วงที่แสดง: จากเวลาที่รัน ไปอีก NEWS_HOURS ชั่วโมง (ค่าเริ่มต้น 24)
 """
+import html as _html
 import json
 import os
 import re
@@ -44,7 +45,42 @@ SEV_NAME = {1: "เบา", 2: "ปานกลาง", 3: "สูง", 4: "ร�
 KEYWORDS = [k.strip().lower() for k in os.getenv(
     "NEWS_KEYWORDS",
     "non-farm,cpi,fomc,federal funds rate,fed chair,pce").split(",") if k.strip()]
-LEGEND = "🟡 เบา · 🟠 ปานกลาง · 🔴 สูง · 🟣 รุนแรงมาก"
+LEGEND = "🟡 เบา · 🟠 กลาง · 🔴 สูง · 🟣 แรงมาก"
+SHOW_HINTS = os.getenv("NEWS_HINTS", "true").lower() == "true"
+CAL_URL = os.getenv("NEWS_LINK", "https://www.forexfactory.com/calendar")
+
+# คำอธิบายสั้นๆ (เฉพาะข่าวระดับ 🔴/🟣) ทิศทางเป็นแนวโน้มทั่วไป ไม่ใช่การรับประกัน
+HINTS = [
+    ("federal funds rate", "มติดอกเบี้ย Fed · ตึงตัวกว่าคาด → ทองมักลง"),
+    ("fomc statement", "แถลงการณ์ Fed · เข้มงวด → ทองมักลง, ผ่อนคลาย → ทองมักขึ้น"),
+    ("fomc press conference", "ประธาน Fed แถลง · ราคามักแกว่งแรงระหว่างแถลง"),
+    ("fomc meeting minutes", "รายงานประชุม Fed · ดูสัญญาณทิศทางดอกเบี้ย"),
+    ("fed chair", "ประธาน Fed พูด · ถ้อยคำเรื่องดอกเบี้ยทำราคาแกว่งได้"),
+    ("non-farm", "จ้างงานนอกภาคเกษตร (NFP) · ดีกว่าคาด → USD แข็ง ทองมักลง"),
+    ("cpi", "เงินเฟ้อผู้บริโภค · สูงกว่าคาด → USD แข็ง ทองมักลง"),
+    ("pce", "เงินเฟ้อ PCE (ตัวที่ Fed ใช้ดู) · สูงกว่าคาด → ทองมักลง"),
+    ("ppi", "เงินเฟ้อฝั่งผู้ผลิต · สูงกว่าคาด → ทองมักลง"),
+    ("unemployment claims", "ผู้ขอสวัสดิการว่างงาน · สูงกว่าคาด (แรงงานอ่อน) → ทองมักขึ้น"),
+    ("unemployment rate", "อัตราว่างงาน · สูงกว่าคาด → ทองมักขึ้น"),
+    ("gdp", "GDP · ดีกว่าคาด → USD แข็ง ทองมักลง"),
+    ("retail sales", "ยอดค้าปลีก · ดีกว่าคาด → USD แข็ง ทองมักลง"),
+    ("ism", "ดัชนี ISM ภาคธุรกิจ · ดีกว่าคาด → USD แข็ง ทองมักลง"),
+]
+
+
+def esc(x):
+    return _html.escape(str(x), quote=False)
+
+
+def hint_for(ev):
+    """คำอธิบายสั้น 1 บรรทัด (เฉพาะข่าวที่ระดับ >= 🔴 และมีในรายการ)"""
+    if not SHOW_HINTS or news_severity(ev) < 3:
+        return ""
+    title = str(ev.get("title", "")).lower()
+    for kw, text in HINTS:
+        if re.search(r"\b" + re.escape(kw) + r"\b", title):
+            return text
+    return ""
 
 
 def news_severity(ev):
@@ -103,31 +139,37 @@ def format_message(events, now):
         return head + "\n\nไม่มีข่าวสำคัญในช่วง 24 ชม.นี้"
     lines = [head, ""]
     for ev in events:
-        day_note = ""
-        if ev["time"].date() != now.date():
-            day_note = " (เลยเที่ยงคืน)"
+        day_note = " (เลยเที่ยงคืน)" if ev["time"].date() != now.date() else ""
         detail = []
         if ev["forecast"]:
-            detail.append(f"คาด {ev['forecast']}")
+            detail.append(f"คาด {esc(ev['forecast'])}")
         if ev["previous"]:
-            detail.append(f"ก่อนหน้า {ev['previous']}")
+            detail.append(f"ก่อน {esc(ev['previous'])}")
         tail = f"  [{' | '.join(detail)}]" if detail else ""
         icon = SEV_ICON[news_severity(ev)]
-        lines.append(f"{icon} {ev['time']:%H:%M}{day_note}  {ev['cur']} {ev['title']}{tail}")
+        lines.append(f"{icon} {ev['time']:%H:%M}{day_note}  {ev['cur']} {esc(ev['title'])}{tail}")
+        hint = hint_for(ev)
+        if hint:
+            lines.append(f"    └ {hint}")
     top = max(news_severity(e) for e in events)
-    lines += ["", f"แรงสุดวันนี้: {SEV_ICON[top]} {SEV_NAME[top]}", LEGEND]
+    lines += ["", f"แรงสุด: {SEV_ICON[top]} {SEV_NAME[top]}  |  {LEGEND}",
+              f'<a href="{CAL_URL}">ดูปฏิทินเต็ม</a>']
     return "\n".join(lines)
 
 
-def send_telegram(text):
+def send_telegram(text, html=False):
     token = os.getenv("TELEGRAM_BOT_TOKEN")
     chat_id = os.getenv("TELEGRAM_CHAT_ID")
     print(text)
     if not token or not chat_id:
         print("(ยังไม่ได้ตั้ง TELEGRAM_BOT_TOKEN / TELEGRAM_CHAT_ID จึงไม่ได้ส่ง)")
         return False
+    payload = {"chat_id": chat_id, "text": text}
+    if html:
+        payload["parse_mode"] = "HTML"
+        payload["disable_web_page_preview"] = "true"
     r = requests.post(f"https://api.telegram.org/bot{token}/sendMessage",
-                      data={"chat_id": chat_id, "text": text}, timeout=20)
+                      data=payload, timeout=20)
     if not r.ok:
         print("Telegram error:", r.status_code, r.text)
     return r.ok
@@ -185,13 +227,18 @@ def remind(now=None):
         for ev in group:
             detail = []
             if ev["forecast"]:
-                detail.append(f"คาด {ev['forecast']}")
+                detail.append(f"คาด {esc(ev['forecast'])}")
             if ev["previous"]:
-                detail.append(f"ก่อนหน้า {ev['previous']}")
+                detail.append(f"ก่อน {esc(ev['previous'])}")
             tail = f"  [{' | '.join(detail)}]" if detail else ""
-            lines.append(f"{SEV_ICON[news_severity(ev)]} {ev['cur']} {ev['title']}{tail}")
+            lines.append(f"{SEV_ICON[news_severity(ev)]} {ev['cur']} {esc(ev['title'])}{tail}")
+            hint = hint_for(ev)
+            if hint:
+                lines.append(f"    └ {hint}")
         lines.append("⚠️ ระวังราคาแกว่งแรงและสเปรดกว้าง")
-        send_telegram("\n".join(lines))
+        if top >= 4:
+            lines.append(f'<a href="{CAL_URL}">ดูปฏิทินเต็ม</a>')
+        send_telegram("\n".join(lines), html=True)
 
     live_ids = {_event_id(e) for e in events}
     state["reminded"] = sorted(k for k in reminded if k.rsplit("@", 1)[0] in live_ids)
@@ -210,7 +257,7 @@ def main():
     if not events and now.weekday() >= 5:      # เสาร์-อาทิตย์ที่ไม่มีข่าว ไม่ต้องส่ง
         print("วันหยุดและไม่มีข่าว ข้าม")
         return
-    send_telegram(format_message(events, now))
+    send_telegram(format_message(events, now), html=True)
 
 
 if __name__ == "__main__":
