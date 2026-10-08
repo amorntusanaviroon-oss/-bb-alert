@@ -1,4 +1,6 @@
 {
+  "raw_up": 0,
+  "raw_lo": 0,
   "up": 0,
   "lo": 0,
   "last_up": {
@@ -22,5 +24,6 @@
   "cont_up": {},
   "cont_lo": {},
   "hist_up": [],
-  "hist_lo": []
+  "hist_lo": [],
+  "cmds_set": true
 }
