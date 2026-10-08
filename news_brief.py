@@ -10,7 +10,7 @@ import os
 import re
 import sys
 import time
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
 import requests
@@ -24,6 +24,9 @@ CURRENCIES = [c.strip().upper() for c in os.getenv("NEWS_CURRENCIES", "USD").spl
 IMPACTS = [i.strip().lower() for i in os.getenv("NEWS_IMPACTS", "High").split(",") if i.strip()]
 HOURS = int(os.getenv("NEWS_HOURS", "24"))
 LABEL = os.getenv("SYMBOL_LABEL", "XAUUSD")
+
+# --- เตือนโทเคน GitHub (ที่ใช้ใน cron-job.org) ใกล้หมดอายุ: ใส่วันหมดอายุเป็น YYYY-MM-DD ---
+TOKEN_EXPIRES = os.getenv("TOKEN_EXPIRES", "").strip()
 
 # --- โหมดเตือนล่วงหน้า (python news_brief.py remind) ---
 NEWS_STATE = Path(os.getenv("NEWS_STATE_FILE", "news_state.json"))
@@ -246,7 +249,31 @@ def remind(now=None):
         NEWS_STATE.write_text(json.dumps(state, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
-def main():
+# ---------------- เตือนโทเคนใกล้หมดอายุ ----------------
+def token_notice(today):
+    """คืนข้อความเตือน (หรือ "" ถ้ายังไม่ถึงเวลา): เตือนที่ 30 และ 14 วันก่อนหมด แล้วทุกวันเมื่อเหลือ <= 7 วัน"""
+    if not TOKEN_EXPIRES:
+        return ""
+    try:
+        exp = date.fromisoformat(TOKEN_EXPIRES)
+    except ValueError:
+        return "⚠️ ค่า TOKEN_EXPIRES ไม่ถูกรูปแบบ (ต้องเป็น YYYY-MM-DD)"
+    left = (exp - today).days
+    if left < 0:
+        head = f"🔑❌ โทเคน GitHub หมดอายุแล้วเมื่อ {exp:%d/%m/%Y} ระบบเตือนอัตโนมัติจะหยุดทำงาน"
+    elif left == 0:
+        head = f"🔑⚠️ โทเคน GitHub หมดอายุ วันนี้ ({exp:%d/%m/%Y})"
+    elif left <= 7:
+        head = f"🔑⚠️ โทเคน GitHub จะหมดอายุในอีก {left} วัน ({exp:%d/%m/%Y})"
+    elif left in (14, 30):
+        head = f"🔑 โทเคน GitHub จะหมดอายุในอีก {left} วัน ({exp:%d/%m/%Y})"
+    else:
+        return ""
+    return (head + "\nต้องสร้างโทเคนใหม่ แล้วแก้ค่า Authorization ในงาน cron-job.org ทั้ง 2 งาน "
+            "(BB Alert + News Brief)\nGitHub > Settings > Developer settings > Fine-grained tokens")
+
+
+def brief():
     now = datetime.now(TZ)
     raw = fetch_events()
     if raw is None:
@@ -257,6 +284,13 @@ def main():
         print("วันหยุดและไม่มีข่าว ข้าม")
         return
     send_telegram(format_message(events, now), html=True)
+
+
+def main():
+    brief()
+    notice = token_notice(datetime.now(TZ).date())
+    if notice:
+        send_telegram(notice)
 
 
 if __name__ == "__main__":
