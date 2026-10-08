@@ -133,8 +133,7 @@ def parse_events(raw, now, hours=None):
 
 
 def format_message(events, now):
-    head = (f"📰 ข่าวที่กระทบ {LABEL} | {TH_DAYS[now.weekday()]} {now.day} {TH_MONTHS[now.month - 1]}\n"
-            f"({'+'.join(CURRENCIES)} · {'/'.join(i.capitalize() for i in IMPACTS)} · เวลาไทย)")
+    head = f"📰 ข่าวที่กระทบ {LABEL} | {TH_DAYS[now.weekday()]} {now.day} {TH_MONTHS[now.month - 1]}"
     if not events:
         return head + "\n\nไม่มีข่าวสำคัญในช่วง 24 ชม.นี้"
     lines = [head, ""]
@@ -152,7 +151,7 @@ def format_message(events, now):
         if hint:
             lines.append(f"    └ {hint}")
     top = max(news_severity(e) for e in events)
-    lines += ["", f"แรงสุด: {SEV_ICON[top]} {SEV_NAME[top]}  |  {LEGEND}",
+    lines += ["", f"แรงสุด: {SEV_ICON[top]} {SEV_NAME[top]}",
               f'<a href="{CAL_URL}">ดูปฏิทินเต็ม</a>']
     return "\n".join(lines)
 
