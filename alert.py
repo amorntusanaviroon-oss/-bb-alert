@@ -1,7 +1,7 @@
 """
 BB Breakout Alert -> Telegram
 ตรวจราคาทองเทียบ Bollinger Bands บน M30 / H1 / H4 / D1 แล้วส่งแจ้งเตือนเข้า Telegram
-บอกระดับว่าหลุดกี่ TF และแจ้งซ้ำเมื่อหลุดไปไกลมาก (escalation)
+บอกระดับว่าหลุดกี่ TF / แจ้งเมื่อหลุดต่อเนื่องหลายแท่ง / แจ้งซ้ำเมื่อหลุดไปไกลมาก / เตือนย้ำ
 รันบน GitHub Actions ทุก ~5 นาที สถานะเก็บใน state.json
 
 CHECK_MODE
@@ -50,6 +50,10 @@ ESC_ENABLED = _bool("ESC_ENABLED", "true")
 ESC_STEP = float(os.getenv("ESC_STEP", "1.0"))            # ทุกกี่ σ เกินขอบ ถึงแจ้งอีกครั้ง
 ESC_MAX_LEVELS = int(os.getenv("ESC_MAX_LEVELS", "2"))    # แจ้งซ้ำได้สูงสุดกี่ครั้งต่อ 1 รอบการหลุด
 ESC_TFS = _list("ESC_TFS", "H1,H4,D1")                    # TF ที่ใช้แจ้งซ้ำ (M30 ถี่เกินจึงไม่ใส่)
+
+# หลุดต่อเนื่อง: TF ที่หลุดอยู่ แล้วแท่งถัดไปยังหลุดต่อโดยไม่กลับเข้ากรอบ จะแจ้ง "แท่งที่ N"
+CONT_ENABLED = _bool("CONT_ENABLED", "true")
+CONT_TFS = _list("CONT_TFS", "H1,H4,D1")                  # M30 ถี่เกินจึงไม่ใส่
 
 # เตือนย้ำ: ถ้ายังหลุดอยู่และไม่มีข้อความใหม่นานเกินกำหนด จะส่งสรุปสถานะอีกครั้ง
 REPEAT_HOURS = float(os.getenv("REPEAT_HOURS", "1"))          # 0 = ปิดเตือนย้ำ
@@ -254,6 +258,32 @@ def evaluate(frames, state, now):
             for k in ("since", "sent", "px"):
                 new_state[f"{k}_{side}"] = state.get(f"{k}_{side}", 0)
 
+    # ---- หลุดต่อเนื่อง: แท่งใหม่เริ่มแล้ว TF เดิมยังหลุดอยู่ (ไม่เคยกลับเข้ากรอบ) ----
+    def bar_ts(tf):
+        idx = frames[tf].index
+        return str(idx[-2] if (CHECK_MODE == "closed" and len(idx) > 1) else idx[-1])
+
+    cont_hits = {"up": [], "lo": []}
+    for side, mask, prev, key in (("up", up_mask, prev_up, "cont_up"),
+                                  ("lo", lo_mask, prev_lo, "cont_lo")):
+        old_c = state.get(key, {}) if inited else {}
+        new_state[key] = {}
+        for tf in res:
+            bit = 1 << TF_BIT[tf]
+            if not (mask & bit):
+                continue                              # กลับเข้ากรอบแล้ว: ล้างตัวนับ
+            ts = bar_ts(tf)
+            o = old_c.get(tf)
+            if not (prev & bit) or not o:
+                new_state[key][tf] = {"ts": ts, "n": 1}
+            elif o["ts"] != ts:
+                n = o["n"] + 1
+                new_state[key][tf] = {"ts": ts, "n": n}
+                if inited and CONT_ENABLED and tf in CONT_TFS:
+                    cont_hits[side].append((tf, n))
+            else:
+                new_state[key][tf] = o
+
     # ---- ประวัติการหลุดรอบใหม่ (นับแม้ข้อความถูกกัน cooldown) ----
     hist = {}
     for side, mask, prev in (("up", up_mask, prev_up), ("lo", lo_mask, prev_lo)):
@@ -308,13 +338,31 @@ def evaluate(frames, state, now):
         sent_now["lo"] = True
 
     for side, name, mask in (("up", "บน", up_mask), ("lo", "ล่าง", lo_mask)):
-        if esc_hits[side]:
+        if esc_hits[side] and not cont_hits[side]:    # ถ้ามีข้อความ "หลุดต่อเนื่อง" อยู่แล้ว จะรวม σ ไว้ในข้อความนั้น
             lvl = severity(mask, far=True)
             detail = ", ".join(f"{tf} {z:.1f}σ" for tf, z in esc_hits[side])
             text = (f"🔥{SEV_ICON[lvl]} {LABEL} ไปไกลจาก BB {name} มาก | "
                     f"ความรุนแรง: {SEV_NAME[lvl]} | {detail} | ราคา {last_price:.2f}")
             msgs.append({"text": text, "strong": lvl >= STRONG_LEVEL})
             sent_now[side] = True
+
+    for side, up, mask in (("up", True, up_mask), ("lo", False, lo_mask)):
+        if cont_hits[side]:
+            lvl = severity(mask, is_far(mask, up))
+            arrow, where = ("🔺", "BB บน") if up else ("🔻", "BB ล่าง")
+            detail = ", ".join(f"{tf} แท่งที่ {n}" for tf, n in cont_hits[side])
+            if esc_hits[side]:
+                detail += " (ไกล " + ", ".join(f"{tf} {z:.1f}σ" for tf, z in esc_hits[side]) + ")"
+            text = (f"🔂{SEV_ICON[lvl]}{arrow} {LABEL} หลุดต่อเนื่อง {where} | {detail} | "
+                    f"ความรุนแรง: {SEV_NAME[lvl]} | หลุด {bits(mask)}/{total} TF: {mask_text(mask)} | "
+                    f"ราคา {last_price:.2f}")
+            msgs.append({"text": text, "strong": False})
+            sent_now[side] = True
+
+    # ข้อความใดๆ ที่ส่งไปแล้ว ให้เริ่มนับเวลาเตือนย้ำใหม่
+    for side in ("up", "lo"):
+        if sent_now[side]:
+            new_state[f"sent_{side}"] = now
 
     # ---- เตือนย้ำ: ยังหลุดอยู่จริง และเงียบมานานเกิน REPEAT_HOURS ----
     if REPEAT_SEC > 0:
