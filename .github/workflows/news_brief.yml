@@ -1,8 +1,8 @@
 name: News Brief
 
+# ไม่มีตารางเวลาของ GitHub แล้ว: ให้ cron-job.org สั่งรันทุกเช้า 07:00 เวลาไทย (ผ่าน workflow_dispatch)
+# กดรันเองได้ที่แท็บ Actions > News Brief > Run workflow
 on:
-  schedule:
-    - cron: "0 0 * * *"        # 00:00 UTC = 07:00 เวลาไทย (GitHub อาจช้าได้ 10-30 นาที)
   workflow_dispatch:
 
 jobs:
@@ -25,4 +25,7 @@ jobs:
           # ปรับได้ เช่น NEWS_IMPACTS: "High,Medium"  NEWS_CURRENCIES: "USD,EUR"
           NEWS_CURRENCIES: "USD"
           NEWS_IMPACTS: "High"
+          # วันหมดอายุของโทเคน GitHub ที่ใส่ใน cron-job.org (YYYY-MM-DD) ระบบจะเตือนใน Telegram ล่วงหน้า
+          # ถ้าสร้างโทเคนใหม่ อย่าลืมแก้วันที่นี้ด้วย
+          TOKEN_EXPIRES: "2027-10-08"
         run: python news_brief.py
