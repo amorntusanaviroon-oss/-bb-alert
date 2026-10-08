@@ -23,10 +23,7 @@
   "px_lo": 0,
   "cont_up": {},
   "cont_lo": {},
-  "hist_up": [
-    1791480388,
-    1791480506
-  ],
+  "hist_up": [],
   "hist_lo": [],
   "tg_offset": 185533848,
   "cmds_set": true
