@@ -1,21 +1,27 @@
 {
-  "up": 0,
+  "up": 8,
   "lo": 0,
-  "last_up": {},
+  "last_up": {
+    "M30": 1791421452
+  },
   "last_lo": {
     "M30": 1791342157,
     "H1": 1791349170,
     "H4": 1791389390
   },
-  "esc_up": {},
+  "esc_up": {
+    "M30": 0
+  },
   "esc_lo": {},
   "init": true,
-  "since_up": 0,
-  "sent_up": 0,
-  "px_up": 0,
+  "since_up": 1791421452,
+  "sent_up": 1791421452,
+  "px_up": 4142.60009765625,
   "since_lo": 0,
   "sent_lo": 0,
   "px_lo": 0,
-  "hist_up": [],
+  "hist_up": [
+    1791421452
+  ],
   "hist_lo": []
 }
