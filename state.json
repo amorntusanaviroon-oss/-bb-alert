@@ -25,9 +25,7 @@
   "cont_up": {},
   "cont_lo": {},
   "hist_up": [],
-  "hist_lo": [
-    1791551064
-  ],
+  "hist_lo": [],
   "tg_offset": 185533850,
   "cmds_set": true
 }
