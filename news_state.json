@@ -1,5 +1,78 @@
 {
- "events": [],
- "fetched_at": 1791681382,
+ "events": [
+  {
+   "time": "2026-10-14T19:30:00+07:00",
+   "title": "Core CPI m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.2%",
+   "previous": "0.3%"
+  },
+  {
+   "time": "2026-10-14T19:30:00+07:00",
+   "title": "Core CPI y/y",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "2.5%",
+   "previous": "2.4%"
+  },
+  {
+   "time": "2026-10-14T19:30:00+07:00",
+   "title": "CPI m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.6%",
+   "previous": "0.4%"
+  },
+  {
+   "time": "2026-10-14T19:30:00+07:00",
+   "title": "CPI y/y",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "3.6%",
+   "previous": "3.4%"
+  },
+  {
+   "time": "2026-10-15T19:30:00+07:00",
+   "title": "Core PPI m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.3%",
+   "previous": "0.2%"
+  },
+  {
+   "time": "2026-10-15T19:30:00+07:00",
+   "title": "Core Retail Sales m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.5%",
+   "previous": "1.4%"
+  },
+  {
+   "time": "2026-10-15T19:30:00+07:00",
+   "title": "PPI m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.5%",
+   "previous": "0.4%"
+  },
+  {
+   "time": "2026-10-15T19:30:00+07:00",
+   "title": "Retail Sales m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.3%",
+   "previous": "1.2%"
+  },
+  {
+   "time": "2026-10-16T10:30:00+07:00",
+   "title": "Fed Chairman Warsh Speaks",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "",
+   "previous": ""
+  }
+ ],
+ "fetched_at": 1791702988,
  "reminded": []
 }
