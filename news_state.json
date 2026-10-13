@@ -45,7 +45,7 @@
    "title": "Core Retail Sales m/m",
    "cur": "USD",
    "impact": "high",
-   "forecast": "0.5%",
+   "forecast": "0.6%",
    "previous": "1.4%"
   },
   {
@@ -53,7 +53,7 @@
    "title": "PPI m/m",
    "cur": "USD",
    "impact": "high",
-   "forecast": "0.5%",
+   "forecast": "0.6%",
    "previous": "0.4%"
   },
   {
@@ -73,6 +73,6 @@
    "previous": ""
   }
  ],
- "fetched_at": 1791832946,
+ "fetched_at": 1791854662,
  "reminded": []
 }
