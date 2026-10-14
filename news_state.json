@@ -1,38 +1,6 @@
 {
  "events": [
   {
-   "time": "2026-10-14T19:30:00+07:00",
-   "title": "Core CPI m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.2%",
-   "previous": "0.3%"
-  },
-  {
-   "time": "2026-10-14T19:30:00+07:00",
-   "title": "Core CPI y/y",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "2.5%",
-   "previous": "2.4%"
-  },
-  {
-   "time": "2026-10-14T19:30:00+07:00",
-   "title": "CPI m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.6%",
-   "previous": "0.4%"
-  },
-  {
-   "time": "2026-10-14T19:30:00+07:00",
-   "title": "CPI y/y",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "3.6%",
-   "previous": "3.4%"
-  },
-  {
    "time": "2026-10-15T19:30:00+07:00",
    "title": "Core PPI m/m",
    "cur": "USD",
@@ -73,11 +41,6 @@
    "previous": ""
   }
  ],
- "fetched_at": 1791984389,
- "reminded": [
-  "2026-10-14T19:30:00+07:00|USD|CPI m/m@30",
-  "2026-10-14T19:30:00+07:00|USD|CPI y/y@30",
-  "2026-10-14T19:30:00+07:00|USD|Core CPI m/m@30",
-  "2026-10-14T19:30:00+07:00|USD|Core CPI y/y@30"
- ]
+ "fetched_at": 1792006111,
+ "reminded": []
 }
