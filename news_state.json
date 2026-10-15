@@ -42,5 +42,10 @@
   }
  ],
  "fetched_at": 1792049437,
- "reminded": []
+ "reminded": [
+  "2026-10-15T19:30:00+07:00|USD|Core PPI m/m@30",
+  "2026-10-15T19:30:00+07:00|USD|Core Retail Sales m/m@30",
+  "2026-10-15T19:30:00+07:00|USD|PPI m/m@30",
+  "2026-10-15T19:30:00+07:00|USD|Retail Sales m/m@30"
+ ]
 }
