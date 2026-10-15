@@ -1,38 +1,6 @@
 {
  "events": [
   {
-   "time": "2026-10-15T19:30:00+07:00",
-   "title": "Core PPI m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.3%",
-   "previous": "0.2%"
-  },
-  {
-   "time": "2026-10-15T19:30:00+07:00",
-   "title": "Core Retail Sales m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.6%",
-   "previous": "1.4%"
-  },
-  {
-   "time": "2026-10-15T19:30:00+07:00",
-   "title": "PPI m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.6%",
-   "previous": "0.4%"
-  },
-  {
-   "time": "2026-10-15T19:30:00+07:00",
-   "title": "Retail Sales m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.3%",
-   "previous": "1.2%"
-  },
-  {
    "time": "2026-10-16T10:30:00+07:00",
    "title": "Fed Chairman Warsh Speaks",
    "cur": "USD",
@@ -41,11 +9,6 @@
    "previous": ""
   }
  ],
- "fetched_at": 1792049437,
- "reminded": [
-  "2026-10-15T19:30:00+07:00|USD|Core PPI m/m@30",
-  "2026-10-15T19:30:00+07:00|USD|Core Retail Sales m/m@30",
-  "2026-10-15T19:30:00+07:00|USD|PPI m/m@30",
-  "2026-10-15T19:30:00+07:00|USD|Retail Sales m/m@30"
- ]
+ "fetched_at": 1792071039,
+ "reminded": []
 }
