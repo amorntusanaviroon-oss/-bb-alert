@@ -16,14 +16,14 @@
   "esc_up": {},
   "esc_lo": {
     "M30": 0,
-    "H1": 0
+    "H1": 1
   },
   "init": true,
   "since_up": 0,
   "sent_up": 0,
   "px_up": 0,
   "since_lo": 1792639225,
-  "sent_lo": 1792639587,
+  "sent_lo": 1792640907,
   "px_lo": 4127.0,
   "cont_up": {},
   "cont_lo": {
