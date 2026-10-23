@@ -23,7 +23,7 @@
   "sent_up": 0,
   "px_up": 0,
   "since_lo": 1792639225,
-  "sent_lo": 1792747343,
+  "sent_lo": 1792750946,
   "px_lo": 4127.0,
   "cont_up": {},
   "cont_lo": {
@@ -33,9 +33,7 @@
     }
   },
   "hist_up": [],
-  "hist_lo": [
-    1792743634
-  ],
+  "hist_lo": [],
   "tg_offset": 185533850,
   "cmds_set": true
 }
