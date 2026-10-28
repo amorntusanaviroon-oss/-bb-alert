@@ -1,30 +1,6 @@
 {
  "events": [
   {
-   "time": "2026-10-29T01:00:00+07:00",
-   "title": "Federal Funds Rate",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "4.00%",
-   "previous": "4.00%"
-  },
-  {
-   "time": "2026-10-29T01:00:00+07:00",
-   "title": "FOMC Statement",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "",
-   "previous": ""
-  },
-  {
-   "time": "2026-10-29T01:30:00+07:00",
-   "title": "FOMC Press Conference",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "",
-   "previous": ""
-  },
-  {
    "time": "2026-10-29T19:30:00+07:00",
    "title": "Advance GDP q/q",
    "cur": "USD",
@@ -41,10 +17,6 @@
    "previous": "0.2%"
   }
  ],
- "fetched_at": 1793197591,
- "reminded": [
-  "2026-10-29T01:00:00+07:00|USD|FOMC Statement@30",
-  "2026-10-29T01:00:00+07:00|USD|Federal Funds Rate@30",
-  "2026-10-29T01:30:00+07:00|USD|FOMC Press Conference@30"
- ]
+ "fetched_at": 1793219310,
+ "reminded": []
 }
