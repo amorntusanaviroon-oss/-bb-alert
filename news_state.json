@@ -1,25 +1,5 @@
 {
- "events": [
-  {
-   "time": "2026-10-29T19:30:00+07:00",
-   "title": "Advance GDP q/q",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "3.2%",
-   "previous": "1.5%"
-  },
-  {
-   "time": "2026-10-29T19:30:00+07:00",
-   "title": "Core PCE Price Index m/m",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "0.3%",
-   "previous": "0.2%"
-  }
- ],
- "fetched_at": 1793262636,
- "reminded": [
-  "2026-10-29T19:30:00+07:00|USD|Advance GDP q/q@30",
-  "2026-10-29T19:30:00+07:00|USD|Core PCE Price Index m/m@30"
- ]
+ "events": [],
+ "fetched_at": 1793284239,
+ "reminded": []
 }
