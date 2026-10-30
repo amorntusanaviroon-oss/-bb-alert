@@ -16,15 +16,15 @@
   },
   "esc_up": {},
   "esc_lo": {
-    "M30": 0,
-    "H1": 0
+    "M30": 1,
+    "H1": 1
   },
   "init": true,
   "since_up": 0,
   "sent_up": 0,
   "px_up": 0,
   "since_lo": 1793319388,
-  "sent_lo": 1793322632,
+  "sent_lo": 1793323839,
   "px_lo": 4015.60009765625,
   "cont_up": {},
   "cont_lo": {
