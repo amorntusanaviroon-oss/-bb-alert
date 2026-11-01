@@ -1,5 +1,38 @@
 {
- "events": [],
- "fetched_at": 1793501309,
+ "events": [
+  {
+   "time": "2026-11-03T22:16:00+07:00",
+   "title": "Congressional Elections",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "",
+   "previous": ""
+  },
+  {
+   "time": "2026-11-06T20:30:00+07:00",
+   "title": "Average Hourly Earnings m/m",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "0.3%",
+   "previous": "0.1%"
+  },
+  {
+   "time": "2026-11-06T20:30:00+07:00",
+   "title": "Non-Farm Employment Change",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "63K",
+   "previous": "29K"
+  },
+  {
+   "time": "2026-11-06T20:30:00+07:00",
+   "title": "Unemployment Rate",
+   "cur": "USD",
+   "impact": "high",
+   "forecast": "4.2%",
+   "previous": "4.2%"
+  }
+ ],
+ "fetched_at": 1793523034,
  "reminded": []
 }
