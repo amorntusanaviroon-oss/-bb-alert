@@ -21,7 +21,7 @@
    "title": "Non-Farm Employment Change",
    "cur": "USD",
    "impact": "high",
-   "forecast": "63K",
+   "forecast": "65K",
    "previous": "29K"
   },
   {
@@ -33,6 +33,6 @@
    "previous": "4.2%"
   }
  ],
- "fetched_at": 1793652990,
+ "fetched_at": 1793674704,
  "reminded": []
 }
