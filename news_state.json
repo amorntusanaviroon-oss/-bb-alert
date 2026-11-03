@@ -1,14 +1,6 @@
 {
  "events": [
   {
-   "time": "2026-11-03T22:16:00+07:00",
-   "title": "Congressional Elections",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "",
-   "previous": ""
-  },
-  {
    "time": "2026-11-06T20:30:00+07:00",
    "title": "Average Hourly Earnings m/m",
    "cur": "USD",
@@ -33,8 +25,6 @@
    "previous": "4.2%"
   }
  ],
- "fetched_at": 1793717911,
- "reminded": [
-  "2026-11-03T22:16:00+07:00|USD|Congressional Elections@30"
- ]
+ "fetched_at": 1793739648,
+ "reminded": []
 }
