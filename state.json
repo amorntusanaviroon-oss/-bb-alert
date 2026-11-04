@@ -20,7 +20,7 @@
   "esc_lo": {},
   "init": true,
   "since_up": 1793769987,
-  "sent_up": 1793787509,
+  "sent_up": 1793791238,
   "px_up": 3959.10009765625,
   "since_lo": 0,
   "sent_lo": 0,
@@ -32,9 +32,7 @@
     }
   },
   "cont_lo": {},
-  "hist_up": [
-    1793783790
-  ],
+  "hist_up": [],
   "hist_lo": [],
   "tg_offset": 185533851,
   "cmds_set": true
