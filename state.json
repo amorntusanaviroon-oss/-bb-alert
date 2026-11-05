@@ -16,7 +16,7 @@
   },
   "esc_up": {},
   "esc_lo": {
-    "M30": 2
+    "M30": 3
   },
   "init": true,
   "since_up": 0,
