@@ -26,5 +26,9 @@
   }
  ],
  "fetched_at": 1793956709,
- "reminded": []
+ "reminded": [
+  "2026-11-06T20:30:00+07:00|USD|Average Hourly Earnings m/m@30",
+  "2026-11-06T20:30:00+07:00|USD|Non-Farm Employment Change@30",
+  "2026-11-06T20:30:00+07:00|USD|Unemployment Rate@30"
+ ]
 }
