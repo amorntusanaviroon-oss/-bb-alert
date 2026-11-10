@@ -1,8 +1,8 @@
 {
   "raw_up": 0,
-  "raw_lo": 1,
+  "raw_lo": 0,
   "up": 0,
-  "lo": 1,
+  "lo": 0,
   "last_up": {
     "M30": 1794258748,
     "H1": 1794260435,
@@ -15,23 +15,16 @@
     "D1": 1793768442
   },
   "esc_up": {},
-  "esc_lo": {
-    "H1": 0
-  },
+  "esc_lo": {},
   "init": true,
   "since_up": 0,
   "sent_up": 0,
   "px_up": 0,
-  "since_lo": 1794301832,
-  "sent_lo": 1794309041,
-  "px_lo": 4107.2998046875,
+  "since_lo": 0,
+  "sent_lo": 0,
+  "px_lo": 0,
   "cont_up": {},
-  "cont_lo": {
-    "H1": {
-      "ts": "2026-11-10 11:00:00+00:00",
-      "n": 3
-    }
-  },
+  "cont_lo": {},
   "hist_up": [],
   "hist_lo": [],
   "tg_offset": 185533852,
