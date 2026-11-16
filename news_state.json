@@ -1,14 +1,6 @@
 {
  "events": [
   {
-   "time": "2026-11-17T00:00:00+07:00",
-   "title": "Fed Chairman Warsh Speaks",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "",
-   "previous": ""
-  },
-  {
    "time": "2026-11-17T20:30:00+07:00",
    "title": "Core Retail Sales m/m",
    "cur": "USD",
@@ -21,7 +13,7 @@
    "title": "Retail Sales m/m",
    "cur": "USD",
    "impact": "high",
-   "forecast": "0.2%",
+   "forecast": "0.1%",
    "previous": "0.8%"
   },
   {
@@ -33,8 +25,6 @@
    "previous": ""
   }
  ],
- "fetched_at": 1794845086,
- "reminded": [
-  "2026-11-17T00:00:00+07:00|USD|Fed Chairman Warsh Speaks@30"
- ]
+ "fetched_at": 1794866804,
+ "reminded": []
 }
