@@ -1,16 +1,5 @@
 {
- "events": [
-  {
-   "time": "2026-11-19T02:00:00+07:00",
-   "title": "FOMC Meeting Minutes",
-   "cur": "USD",
-   "impact": "high",
-   "forecast": "",
-   "previous": ""
-  }
- ],
- "fetched_at": 1795018605,
- "reminded": [
-  "2026-11-19T02:00:00+07:00|USD|FOMC Meeting Minutes@30"
- ]
+ "events": [],
+ "fetched_at": 1795040313,
+ "reminded": []
 }
