@@ -18,5 +18,8 @@
   }
  ],
  "fetched_at": 1795603835,
- "reminded": []
+ "reminded": [
+  "2026-11-25T20:30:00+07:00|USD|Core PCE Price Index m/m@30",
+  "2026-11-25T20:30:00+07:00|USD|Prelim GDP q/q@30"
+ ]
 }
